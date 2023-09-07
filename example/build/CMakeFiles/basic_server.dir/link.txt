@@ -1,0 +1,1 @@
+/usr/bin/c++  -pthread -std=c++11 -rdynamic CMakeFiles/basic_server.dir/server/server.cpp.o -o basic_server  -lzookeeper_mt 

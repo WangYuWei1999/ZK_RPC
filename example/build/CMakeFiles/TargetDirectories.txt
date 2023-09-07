@@ -1,0 +1,4 @@
+/home/wyw/mydir/zk_rpc/example/build/CMakeFiles/basic_server.dir
+/home/wyw/mydir/zk_rpc/example/build/CMakeFiles/basic_client.dir
+/home/wyw/mydir/zk_rpc/example/build/CMakeFiles/edit_cache.dir
+/home/wyw/mydir/zk_rpc/example/build/CMakeFiles/rebuild_cache.dir
