@@ -4,20 +4,10 @@
 
 #define BUFFER_SIZE 128
 
-namespace rest_rpc{
-//namespace rpc_service{
 
-//单例模式查询本机ip zk客户端ip
-
-/*
-* 框架读取配置文件类
-* rpcserver:ip rpcserver:port
-* zookeeper:ip zookeeper:port
-*/
 class RpcConfigure
 {
 public:
-
     static RpcConfigure& get_configure(){
         static RpcConfigure configure;
         return configure;
@@ -114,6 +104,3 @@ private:
 };
 
 std::unordered_map<std::string, std::string> RpcConfigure::configure_map_;
-
-//}
-}

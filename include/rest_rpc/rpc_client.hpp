@@ -13,6 +13,8 @@
 #include<thread>
 #include<utility>
 
+#include"zookeeperclient.hpp"
+
 using namespace rest_rpc::rpc_service;
 
 namespace rest_rpc{
@@ -82,17 +84,14 @@ public:
     rpc_client(const std::string& servername, std::function<void(long, const std::string&)> on_result_received_callback = nullptr):socket_(ios_), 
     work_(ios_), deadline_(ios_), body_(INIT_BUF_SIZE), on_result_received_callback_(std::move(on_result_received_callback)){
         std::string serpath = "/"+servername;   //服务端在zk上的注册路径为 /servername
-        std::string serip_port = zk_client_.get_data(serpath.c_str());
-        if(serip_port == ""){
+        auto ser_ip_port = zk_client_.get_data(serpath.c_str());
+        if(ser_ip_port.first == ""){
             std::cout<<"查询失败！"<<std::endl;            
-        }
-        int host_index = serip_port.find(":");
-        if(host_index == -1){
-            std::cout<<"address is invalid!"<<std::endl;
-        }
+        }        
+
         //从zk查询到服务端ip和端口
-        host_ = serip_port.substr(0, host_index);
-        port_ = atoi(serip_port.substr(host_index+1, serip_port.size()-host_index).c_str());
+        host_ = ser_ip_port.first;
+        port_ = ser_ip_port.second;
 
         thd_ = std::make_shared<std::thread>([this]{ios_.run();});
     }
@@ -127,6 +126,14 @@ public:
         if(is_ssl) upgrade_to_ssl();
         async_connect();
         return wait_conn(timeout);
+    }
+
+    //参数只给服务端名称，通过zookeeper查询服务端ip端口
+    bool connect(const std::string& servername){
+        std::string ser_path = "/"+servername;                  //查询要带上根路径“/”
+        auto ip_port = zk_client_.get_data(ser_path.c_str());
+        bool r = connect(ip_port.first, ip_port.second);
+        return r;
     }
 
     bool connect(const std::string& host, unsigned short port, bool is_ssl = false, size_t timeout = 3){
@@ -696,6 +703,8 @@ private:
             asio::async_write(socket_, buffers, std::move(handler));  //发送
         }
     }
+
+    ZookeeperClient zkClient_; //增加zookeeper客户端来查询
 
     asio::io_context ios_;
     asio::ip::tcp::socket socket_;

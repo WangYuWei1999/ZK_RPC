@@ -333,7 +333,7 @@ private:
 #ifdef _DEBUG
         std::initiliazer_list<int>{(std::cout<<args<<' ',0)...};
         std::cout<<"\n";
-#endif;
+#endif
     }
     
     void print(const asio::error_code &ec) { print(ec.value(), ec.message()); }

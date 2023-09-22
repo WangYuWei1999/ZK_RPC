@@ -19,13 +19,14 @@ namespace rpc_service{
 class connection;
 class router:asio::noncopyable{
 public:
+
     //注册非成员函数
     template<ExecMode model, typename Function>  
     void register_handler(const std::string& name, Function f){
         //从name哈希出key
         uint32_t key = MD5::MD5Hash32(name.data());      //string.data()与.c_str()相同
         key2func_name_.emplace(key, name);                //将key和name加入到哈希表中
-        return register_nonmember_func<model>(key, std::move(f));   //继续注册到
+        return register_nonmember_func<model>(key, std::move(f));   //继续注册
     }
 
     //注册成员函数

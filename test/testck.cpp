@@ -3,6 +3,7 @@
 #include <zookeeper/zookeeper.h>
 #include <string>
 #include<string.h>
+#include"testconfigure.hpp"
 
 
 void global_watcher(zhandle_t *handler, int type, int state, const char *path, void *wathcer_context)
@@ -33,9 +34,11 @@ public:
 
     //启动连接 zkserver
     void start(){
-        //zk客户端的ip和端口
-        std::string host = "127.0.0.1";
-        std::string port = "1234";
+        //zk服务端的ip和端口
+        //std::string host = "127.0.0.1";
+        //std::string port = "2181";
+        std::string host = RpcConfigure::get_configure().find("zookeeper_ip");
+        std::string port = RpcConfigure::get_configure().find("zookeeper_port");
         std::string con_str = host + ":" + port;
 
     zhandle_ = zookeeper_init(con_str.c_str(), global_watcher, 30000, nullptr, nullptr, 0);
@@ -50,6 +53,7 @@ public:
     zoo_set_context(zhandle_, &sem); //设置信号量s
     sem_wait(&sem);
     //RPC_LOG_INFO("zookeeper init success");
+    std::cout<<"zookeeper init succeed!"<<std::endl;
     }
     
     //在zkserver 根据指定的path创建znode节点
@@ -84,7 +88,7 @@ public:
     }
 
     //根据参数指定的znode节点路径，获取znode节点的值
-    std::string get_data(const char *path){
+    std::pair<std::string, unsigned short> get_data(const char *path){
          //buffer存储返回结果
         char buffer[64] = {0};
         int buffer_len = sizeof(buffer);
@@ -93,11 +97,19 @@ public:
         {
             //RPC_LOG_ERROR("can't get znode... path: %s", path);
             std::cout<<"can't get znode... path"<<std::endl;
-            return "";
+            return {"",0};
         }
         else
         {
-            return buffer;
+            std::string name_ip_port = buffer;
+            int host_index = name_ip_port.find(":");
+            if(host_index == -1){
+                std::cout<<"address is invalid!"<<std::endl;
+            }
+            std::string host = name_ip_port.substr(0, host_index);
+            unsigned short port = atoi(name_ip_port.substr(host_index+1, name_ip_port.size()-host_index).c_str());
+            return std::make_pair(host, port);
+           // return {host, port};
         }
     }
 
@@ -108,18 +120,29 @@ private:
 
 int main(){
 
-    std::string host = "127.0.0.1";
-    std::string port = "1234";
-    std::string con_str = host + ":" + port;
-
+std::cout<<"start zk!"<<std::endl;
     ZookeeperClient zk;
     std::string servername = "NAME";
     std::string ser_path_="/"+ servername;
     std::string ip_ = "192.168.50.128";
-
+std::cout<<ip_<<std::endl;
     zk.create(ser_path_.c_str(), ip_.c_str(), ip_.size());
 
-    std::string serip_port = zk.get_data(ser_path_.c_str());
+    std::cout<<"create zk succeed!"<<std::endl;
 
-    std::cout<<serip_port<<std::endl;
+    std::string methodname = "echo";
+    int port = 4399;
+    zk.create_method(ser_path_, methodname, ip_ , port);
+    std::string methodpath = ser_path_+"/"+methodname;
+
+   // std::string serip_port = zk.get_data(ser_path_.c_str());
+    
+
+    //std::cout<<serip_port<<std::endl;
+
+    auto name_ip_port = zk.get_data(methodpath.c_str());
+std::cout<<"name_ip_port: "<<name_ip_port.first<< " "<<name_ip_port.second<<std::endl;
+        
+       
+    return 0;
 }

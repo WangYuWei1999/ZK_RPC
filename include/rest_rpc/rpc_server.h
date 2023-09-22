@@ -7,8 +7,8 @@
 #include<mutex>
 #include<thread>
 #include <zookeeper/zookeeper.h>
+#include<string.h>
 #include"zookeeperclient.hpp"
-#include"configure.hpp"
 
 using asio::ip::tcp;
 
@@ -22,14 +22,13 @@ public:             //变化1,构造函数增加一个参数：服务对象名�
     :port_(port), service_name_(servervicename), ser_path_("/"+servervicename), io_service_pool_(size),acceptor_(io_service_pool_.get_io_service(), tcp::endpoint(tcp::v4(),port)),
     timeout_seconds_(timeout_seconds), check_seconds_(check_seconds), signals_(io_service_pool_.get_io_service()){  //利用io_service即io_context初始化
         
-        //ip_="192.168.50.128";
-        std::cout<<"aaaa"<<std::endl;          
         ip_ = RpcConfigure::get_configure().find("rpcserver_ip");  //利用RpcConfigure单例从本地文件rpc.conf查询ip
-        std::cout<<ip_<<std::endl;
-        
-        //在zookeeper中创建一个根节点 节点值为ip地址
-        //zk_client_.create(ser_path_.c_str(), nullptr, 0);
-        zk_client_.create(ser_path_.c_str(), ip_.c_str(), ip_.size());
+        std::cout<<"ip_: "<<ip_<<std::endl;
+        char ip_port[128]={0};
+        sprintf(ip_port,"%s:%d", ip_.c_str(), port_);
+        //在zookeeper中创建一个根节点 节点值为ip地址+端口
+        zk_client_.create(ser_path_.c_str(), ip_port, strlen(ip_port));
+        //zk_client_.create(ser_path_.c_str(), ip_.c_str(), ip_.size());
 
         do_accept();
         check_thread_ = std::make_shared<std::thread>([this]{clean();});
@@ -223,7 +222,7 @@ private:
     uint16_t port_;                  //新增本机端口号
     std::string service_name_;       //新增服务对象名称，用于在zk上注册根节点
     std::string ser_path_;           //新增服务对象根节点路径：/service_name_
-    ZookeeperClient zk_client_;       //新增Zookeeper客户端 用于注册本地服务
+    ZookeeperClient zk_client_;      //新增Zookeeper客户端 用于注册本地服务
 
     io_service_pool io_service_pool_; //线程池
     tcp::acceptor acceptor_;

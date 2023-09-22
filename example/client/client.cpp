@@ -6,6 +6,8 @@
 using namespace rest_rpc;
 using namespace rest_rpc::rpc_service;
 
+const std::string SERVERNAME = "FIRST_SERVER";
+
 void test_add() {
   try {
     rpc_client client("127.0.0.1", 9000);
@@ -198,7 +200,8 @@ struct dummy1 {
 };
 
 void test_echo() {
-  rpc_client client("127.0.0.1", 9000);
+  //rpc_client client("127.0.0.1", 9000);
+  rpc_client client(SERVERNAME);                        //使用servername查询服务端ip和端口
   bool r = client.connect();
   if (!r) {
     std::cout << "connect timeout" << std::endl;
@@ -208,17 +211,17 @@ void test_echo() {
   {
     dummy1 d1{42, L"test"};
     auto result = client.call<dummy1>("get_dummy", d1);
-    std::cout << result.id << std::endl;
+    std::cout <<"result.id: "<< result.id << std::endl;
   }
 
   {
     auto result = client.call<std::string>("echo", "test");
-    std::cout << result << std::endl;
+    std::cout << "result1: " << result << std::endl;
   }
 
   {
     auto result = client.call<std::string>("async_echo", "test");
-    std::cout << result << std::endl;
+    std::cout << "result2: " << result << std::endl;
   }
 }
 
@@ -314,7 +317,8 @@ void test_connect() {
   rpc_client client;
   client.enable_auto_reconnect(); // automatic reconnect
   client.enable_auto_heartbeat(); // automatic heartbeat
-  bool r = client.connect("127.0.0.1", 9000);
+  //bool r = client.connect("127.0.0.1", 9000);
+  bool r = client.connect(SERVERNAME);                       //使用zookeeper查询服务端地址和端口
   int count = 0;
   while (true) {
     if (client.has_connected()) {
@@ -348,7 +352,8 @@ void test_connect() {
 //异步回调测试
 void test_callback() {
   rpc_client client;
-  bool r = client.connect("127.0.0.1", 9000);
+  //bool r = client.connect("127.0.0.1", 9000);
+  bool r = client.connect(SERVERNAME);
 
   for (size_t i = 0; i < 100; i++) {
     std::string test = "test" + std::to_string(i + 1);
@@ -639,7 +644,7 @@ void benchmark_test() {
 }
 
 int main() {
-  benchmark_test();
+  //benchmark_test();
   std::cout<<"benchmark_test finished!"<<std::endl;
 
   test_connect();
@@ -651,16 +656,16 @@ int main() {
   test_echo();
   std::cout<<"test_echo finished!"<<std::endl;
 
-  test_sync_client();
-  test_async_client();
-  test_threads();
-  test_sub1();
-  test_call_with_timeout();
-  test_connect();
-  test_upload();
-  test_download();
-  multi_client_performance(20);
-  test_performance1();
-  test_multiple_thread();
+  // test_sync_client();
+  // test_async_client();
+  // test_threads();
+  // test_sub1();
+  // test_call_with_timeout();
+  // test_connect();
+  // test_upload();
+  // test_download();
+  // multi_client_performance(20);
+  // test_performance1();
+  // test_multiple_thread();
   return 0;
 }

@@ -10,7 +10,7 @@
 #include"configure.hpp"
 
 namespace rest_rpc{
-namespace rpc_service{
+//namespace rpc_service{
 
 void global_watcher(zhandle_t *handler, int type, int state, const char *path, void *wathcer_context)
 {
@@ -40,23 +40,26 @@ public:
 
     //启动连接 zkserver
     void start(){
-        //zk客户端的ip和端口
-        std::string host = RpcConfigure::get_configure().find("zookeeper_ip");
-        std::string port = RpcConfigure::get_configure().find("zookeeper_port");
+        //zk服务端的ip和端口
+        // std::string host = RpcConfigure::get_configure().find("zookeeper_ip");
+        // std::string port = RpcConfigure::get_configure().find("zookeeper_port");
+        std::string host = "127.0.0.1";
+        std::string port = "2181";
         std::string con_str = host + ":" + port;
+        std::cout<<con_str<<std::endl;
 
-    zhandle_ = zookeeper_init(con_str.c_str(), global_watcher, 30000, nullptr, nullptr, 0);
-    if (zhandle_ == nullptr)
-    {
-       // RPC_LOG_FATAL("zookeeper init error");
-       std::cout<<"zookeeper init error"<<std::endl;
-    }
+        zhandle_ = zookeeper_init(con_str.c_str(), global_watcher, 30000, nullptr, nullptr, 0);
+        if (zhandle_ == nullptr)
+        {
+        // RPC_LOG_FATAL("zookeeper init error");
+        std::cout<<"zookeeper init error"<<std::endl;
+        }
 
-    sem_t sem;
-    sem_init(&sem, 0, 0);
-    zoo_set_context(zhandle_, &sem); //设置信号量s
-    sem_wait(&sem);
-    //RPC_LOG_INFO("zookeeper init success");
+        sem_t sem;
+        sem_init(&sem, 0, 0);
+        zoo_set_context(zhandle_, &sem); //设置信号量s
+        sem_wait(&sem);
+        //RPC_LOG_INFO("zookeeper init success");
     }
     
     //在zkserver 根据指定的path创建znode节点
@@ -91,7 +94,7 @@ public:
     }
 
     //根据参数指定的znode节点路径，获取znode节点的值
-    std::string get_data(const char *path){
+    std::pair<std::string, unsigned short> get_data(const char *path){
          //buffer存储返回结果
         char buffer[64] = {0};
         int buffer_len = sizeof(buffer);
@@ -100,11 +103,19 @@ public:
         {
             //RPC_LOG_ERROR("can't get znode... path: %s", path);
             std::cout<<"can't get znode... path"<<std::endl;
-            return "";
+            return {"",0};
         }
         else
         {
-            return buffer;
+            std::string name_ip_port = buffer;
+            int host_index = name_ip_port.find(":");
+            if(host_index == -1){
+                std::cout<<"address is invalid!"<<std::endl;
+            }
+            std::string host = name_ip_port.substr(0, host_index);
+            unsigned short port = atoi(name_ip_port.substr(host_index+1, name_ip_port.size()-host_index).c_str());
+            return std::make_pair(host, port);
+           // return {host, port};
         }
     }
 
@@ -113,6 +124,6 @@ private:
     zhandle_t *zhandle_;
 };
 
-} //namespace rpc_service
+//} //namespace rpc_service
 } //namwspace rest_rpc
 #endif

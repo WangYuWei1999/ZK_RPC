@@ -4,7 +4,8 @@ using namespace rpc_service;
 #include<fstream>
 #include"qps.h"
 
-#define SERVERNAME "FIRSTSERVER"
+//#define SERVERNAME "FIRSTSERVER"
+const std::string SERVERNAME = "FIRST_SERVER";
 
 struct dummy {
   int add(rpc_conn conn, int a, int b) {
@@ -123,8 +124,8 @@ dummy1 get_dummy(rpc_conn conn, dummy1 d){return d;}
 
 int main(){
     //benchmark_test();
-   // std::string servicename = "firstserver"; //创建服务端使用服务端名称+端口
-
+  
+   //创建服务端使用服务端名称+端口
    std::cout<<"start "<<std::endl;
 
     rpc_server server(SERVERNAME, 9000, std::thread::hardware_concurrency());
